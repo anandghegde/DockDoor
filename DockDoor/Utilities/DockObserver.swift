@@ -831,7 +831,10 @@ final class DockObserver {
             return nil
         }
 
-        if type == .leftMouseDown, appUnderMouse.dockItemElement != nil {
+        // Control-click is a secondary click; leave it to the Dock's context menu
+        let isPrimaryClick = type == .leftMouseDown && !event.flags.contains(.maskControl)
+
+        if isPrimaryClick, appUnderMouse.dockItemElement != nil {
             DispatchQueue.main.async { [weak self] in
                 self?.previewCoordinator.cancelPendingShow()
                 self?.previewCoordinator.restoreDockAutoHideState()
@@ -844,14 +847,14 @@ final class DockObserver {
                 return nil
             }
 
-            if type == .leftMouseDown, event.flags.contains(.maskShift),
+            if isPrimaryClick, event.flags.contains(.maskShift),
                app.bundleIdentifier != Bundle.main.bundleIdentifier
             {
                 handleShiftClickNewWindow(app: app)
                 return nil
             }
 
-            if type == .leftMouseDown, !previewCoordinator.mouseIsWithinPreviewWindow {
+            if isPrimaryClick, !previewCoordinator.mouseIsWithinPreviewWindow {
                 let shouldIntercept = handleDockClick(app: app)
                 if shouldIntercept {
                     return nil
